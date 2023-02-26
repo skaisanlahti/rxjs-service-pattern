@@ -1,7 +1,7 @@
 import produce from 'immer';
 import { map, timer } from 'rxjs';
-import { Task } from '../app-layer/task';
-import { Todo } from '../app-layer/todo-service';
+import Task from '../../utilities/task';
+import { Todo } from '../services/todo-service';
 import todoJson from './todos.json';
 
 let todos = todoJson.todos as Todo[];
@@ -59,6 +59,9 @@ function saveTodos(newTodos: Todo[]) {
   });
 }
 
+/**
+ * Collection of data fetching operations each wrapped in its own Task handler.
+ */
 export const api = {
   getTodos: new Task(getTodos),
   addTodo: new Task(addTodo),

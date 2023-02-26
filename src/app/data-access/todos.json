@@ -1,9 +1,9 @@
 {
   "todos": [
-    { "id": "1", "task": "Make tea", "done": false },
+    { "id": "1", "task": "Make breakfast", "done": false },
     { "id": "2", "task": "Study code", "done": false },
     { "id": "3", "task": "Go to work", "done": false },
     { "id": "4", "task": "Go to gym", "done": false },
-    { "id": "5", "task": "Take a shower", "done": false }
+    { "id": "5", "task": "Go to sauna", "done": false }
   ]
 }

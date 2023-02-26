@@ -1,23 +1,27 @@
 import { useEffect } from 'react';
-import { useServices } from '../app-layer/create-services';
-import { useServiceState } from '../app-layer/utils';
+import useStream from '../../utilities/use-service-state';
+import { useServices } from '../services/create-services';
 
 export function Root() {
+  // get access to services through a hook
   const { counter, todos } = useServices();
 
-  const count = useServiceState(counter.count$, 0);
-  const double = useServiceState(counter.double$, 0);
-
-  const taskField = useServiceState(todos.taskField$, '');
-  const todoItems = useServiceState(todos.items$, []);
-  const getLoading = useServiceState(todos.getLoading$, false);
-  const saveLoading = useServiceState(todos.saveLoading$, false);
-  const resetLoading = useServiceState(todos.resetLoading$, false);
+  // observe service state by assigning its value to local component state
+  const count = useStream(counter.count$, 0);
+  const double = useStream(counter.double$, 0);
+  const taskInput = useStream(todos.taskInput$, '');
+  const todoItems = useStream(todos.items$, []);
+  const getLoading = useStream(todos.getLoading$, false);
+  const saveLoading = useStream(todos.saveLoading$, false);
+  const resetLoading = useStream(todos.resetLoading$, false);
 
   useEffect(() => {
+    // fetch data by running a task
+    // state and canceling is handled internally by the task
     todos.getTodos();
   }, []);
 
+  // user service methods in click handlers to handle user actions
   return (
     <div className="main-layout">
       <header className="header">
@@ -40,13 +44,13 @@ export function Root() {
         <input
           className="todo-input"
           placeholder="Task..."
-          value={taskField}
+          value={taskInput}
           onKeyDown={(e) => {
             if (e.code === 'Enter') {
               todos.addTodo();
             }
           }}
-          onChange={(e) => todos.setTaskField(e.target.value)}
+          onChange={(e) => todos.setTaskInput(e.target.value)}
         />
         <div>
           <button className="button" onClick={() => todos.addTodo()}>
@@ -82,7 +86,7 @@ export function Root() {
               </div>
               <button
                 className="button"
-                onClick={() => todos.finishTodo(todo.id)}
+                onClick={() => todos.toggleDone(todo.id)}
               >
                 Done
               </button>

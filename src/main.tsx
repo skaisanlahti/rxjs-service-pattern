@@ -4,9 +4,9 @@ import ReactDOM from 'react-dom/client';
 import {
   ServiceProvider,
   createServices,
-} from './app/app-layer/create-services';
-import { Root } from './app/ui-layer/Root';
-import './app/ui-layer/styles/main.css';
+} from './app/services/create-services';
+import { Root } from './app/ui/Root';
+import './app/ui/styles/main.css';
 
 enableMapSet();
 

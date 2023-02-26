@@ -2,8 +2,12 @@ import React from 'react';
 
 // https://gist.github.com/sw-yx/f18fe6dd4c43fddb3a4971e80114a052
 
-export function createTypedContext<A>() {
-  const context = React.createContext<A | undefined>(undefined);
+/**
+ * Creates a typed context with a non-nullable value and a hook to access it.
+ * @returns Context Hook and Context Provider
+ */
+export default function createTypedContext<Value>() {
+  const context = React.createContext<Value | undefined>(undefined);
 
   function useTypedContext() {
     const value = React.useContext(context);

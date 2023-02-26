@@ -1,15 +1,16 @@
-import { api } from '../data-layer/todo-data';
+import createTypedContext from '../../utilities/create-typed-context';
+import { api } from '../data-access/todo-data';
 import { CounterService } from './counter-service';
-import { createTypedContext } from './create-typed-context';
 import { TodoService } from './todo-service';
 
+/**
+ * Creates an object of service instances.
+ * @returns Services
+ */
 export function createServices() {
-  const counter = new CounterService();
-  const todos = new TodoService(api);
-
   return {
-    counter,
-    todos,
+    counter: new CounterService(),
+    todos: new TodoService(api),
   };
 }
 
