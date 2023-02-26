@@ -21,7 +21,7 @@ export function Root() {
     todos.getTodos();
   }, []);
 
-  // user service methods in click handlers to handle user actions
+  // use service methods in click handlers to handle user actions
   return (
     <div className="main-layout">
       <header className="header">
