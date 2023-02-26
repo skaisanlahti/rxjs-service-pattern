@@ -71,7 +71,7 @@ function saveTodos(newTodos: Todo[]) {
 
 /**
  * Collection of data fetching operations each wrapped in its own Task handler.
- * Wrapping could be done locally in services to give each service their own
+ * Wrapping could also be done locally in services to give each service their own
  * instance of the task pipeline.
  */
 export const api = {
