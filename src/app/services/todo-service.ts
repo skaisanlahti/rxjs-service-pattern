@@ -1,8 +1,8 @@
 import { merge, skip } from 'rxjs';
 import createID from '../../utilities/create-id';
-import createSelector from '../../utilities/create-selector';
+import memoizeStream from '../../utilities/memoize-stream';
 import StatefulService from '../../utilities/stateful-service';
-import { API } from '../data-access/todo-data';
+import { API } from '../data-layer/todo-data';
 
 export interface Todo {
   id: string;
@@ -19,7 +19,7 @@ function createTodo(task: string) {
   return { id: createID(), task, done: false };
 }
 
-export interface TodoState {
+interface TodoState {
   items: Todo[];
   taskInput: string;
 }
@@ -34,24 +34,20 @@ export class TodoService extends StatefulService<TodoState> {
   constructor(private _api: API) {
     super(initialState);
 
-    /**
-     * Assign getTodo results to local state. Skip initial value when establishing subscription.
-     */
-    this._api.getTodos.results$.pipe(skip(1)).subscribe((result) => {
+    // Assign getTodo results to local state. Skip initial value when establishing subscription.
+    this._api.getTodosAsync.results$.pipe(skip(1)).subscribe((result) => {
       if (!result) return;
       this.setState((state) => {
         state.items = result.data;
       });
     });
 
-    /**
-     * Refetch todos from server after mutations. Skip initial value when establishing subscription.
-     */
+    // Refetch todos from server after mutations. Skip initial value when establishing subscription.
     merge(
       this._api.saveTodos.results$.pipe(skip(1)),
       this._api.resetTodos.results$.pipe(skip(1)),
     ).subscribe(() => {
-      this._api.getTodos.run();
+      this._api.getTodosAsync.run();
     });
   }
 
@@ -59,14 +55,14 @@ export class TodoService extends StatefulService<TodoState> {
    * Observable array of todos.
    */
   get items$() {
-    return this.createSelector((s) => s.items);
+    return this.createStream((state) => state.items);
   }
 
   /**
    * Observable input field value.
    */
   get taskInput$() {
-    return this.createSelector((state) => state.taskInput);
+    return this.createStream((state) => state.taskInput);
   }
 
   /**
@@ -83,21 +79,21 @@ export class TodoService extends StatefulService<TodoState> {
    * Loading state of getTodos task.
    */
   get getLoading$() {
-    return createSelector(this._api.getTodos.pending$);
+    return memoizeStream(this._api.getTodosAsync.pending$);
   }
 
   /**
    * Fetches todos from server.
    */
   getTodos() {
-    this._api.getTodos.run();
+    this._api.getTodosAsync.run();
   }
 
   /**
    * Loading state of saveTodos task.
    */
   get saveLoading$() {
-    return createSelector(this._api.saveTodos.pending$);
+    return memoizeStream(this._api.saveTodos.pending$);
   }
 
   /**
@@ -112,7 +108,7 @@ export class TodoService extends StatefulService<TodoState> {
    * Loading state of resetTodos task.
    */
   get resetLoading$() {
-    return createSelector(this._api.resetTodos.pending$);
+    return memoizeStream(this._api.resetTodos.pending$);
   }
 
   /**

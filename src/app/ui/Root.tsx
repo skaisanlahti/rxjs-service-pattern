@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import useStream from '../../utilities/use-service-state';
+import useStream from '../../utilities/use-stream';
 import { useServices } from '../services/create-services';
 
 export function Root() {
   // get access to services through a hook
   const { counter, todos } = useServices();
 
-  // observe service state by assigning its value to local component state
+  // observe service state and assign new values to local component state
   const count = useStream(counter.count$, 0);
   const double = useStream(counter.double$, 0);
   const taskInput = useStream(todos.taskInput$, '');

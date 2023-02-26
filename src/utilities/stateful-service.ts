@@ -1,12 +1,12 @@
 import produce from 'immer';
 import { BehaviorSubject, Observable, map } from 'rxjs';
-import createSelector from './create-selector';
+import memoizeStream from './memoize-stream';
 
 export default class StatefulService<State> {
   private _state$;
 
   /**
-   * Provides base functionality for handling state and creating observable streams of the state.
+   * Provides base functionality for handling state and creating selector streams.
    * @param initialState Starting state
    */
   constructor(initialState: State) {
@@ -30,14 +30,17 @@ export default class StatefulService<State> {
   }
 
   /**
-   * Creates a memoized observable stream from the state.
+   * Create a memoized stream of state changes.
+   * Takes an optional selector function to create a derived stream.
+   * @param selector Optional selector function
+   * @returns Memoized stream of the state
    */
-  createSelector(): Observable<State>;
-  createSelector<SelectedState>(
+  createStream(): Observable<State>;
+  createStream<SelectedState>(
     selector: (state: State) => SelectedState,
   ): Observable<SelectedState>;
-  createSelector<SelectedState>(selector?: (state: State) => SelectedState) {
-    if (selector) return createSelector(this._state$.pipe(map(selector)));
-    return createSelector(this._state$);
+  createStream<SelectedState>(selector?: (state: State) => SelectedState) {
+    if (selector) return memoizeStream(this._state$.pipe(map(selector)));
+    return memoizeStream(this._state$);
   }
 }

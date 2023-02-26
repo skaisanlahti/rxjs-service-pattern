@@ -1,5 +1,5 @@
 import produce from 'immer';
-import { map, timer } from 'rxjs';
+import { firstValueFrom, map, timer } from 'rxjs';
 import Task from '../../utilities/task';
 import { Todo } from '../services/todo-service';
 import todoJson from './todos.json';
@@ -13,6 +13,16 @@ export interface Response<T> {
 
 function mockRequest<T>(func: () => Response<T>) {
   return timer(mockDelay).pipe(map(func));
+}
+
+function mockPromise<T>(func: () => Response<T>) {
+  return firstValueFrom(timer(mockDelay).pipe(map(func)));
+}
+
+function getTodosAsync() {
+  return mockPromise(() => {
+    return { data: todos } as Response<Todo[]>;
+  });
 }
 
 function getTodos() {
@@ -63,12 +73,15 @@ function saveTodos(newTodos: Todo[]) {
  * Collection of data fetching operations each wrapped in its own Task handler.
  */
 export const api = {
-  getTodos: new Task(getTodos),
+  getTodos: new Task(getTodos, { retry: { count: 5, delay: 1000 } }),
   addTodo: new Task(addTodo),
   removeTodo: new Task(removeTodo),
   checkTodo: new Task(checkTodo),
   resetTodos: new Task(resetTodos),
   saveTodos: new Task(saveTodos),
+  getTodosAsync: Task.fromPromise(getTodosAsync, {
+    retry: { count: 5, delay: 1000 },
+  }),
 };
 
 export type API = typeof api;

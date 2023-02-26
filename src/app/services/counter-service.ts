@@ -1,6 +1,6 @@
 import StatefulService from '../../utilities/stateful-service';
 
-export interface CounterState {
+interface CounterState {
   count: number;
 }
 
@@ -18,14 +18,14 @@ export class CounterService extends StatefulService<CounterState> {
    * Observable count value.
    */
   get count$() {
-    return this.createSelector((s) => s.count);
+    return this.createStream((s) => s.count);
   }
 
   /**
    * Derived observable value.
    */
   get double$() {
-    return this.createSelector((s) => s.count * 2);
+    return this.createStream((s) => s.count * 2);
   }
 
   /**
