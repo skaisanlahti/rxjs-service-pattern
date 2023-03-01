@@ -1,49 +1,70 @@
-import { State } from '../../utilities/state';
+import State from '../../utilities/state';
 
 interface CounterState {
   count: number;
 }
 
-const initialState: CounterState = {
-  count: 0,
-};
+const initialState: CounterState = { count: 0 };
 
-function CounterService(state: State<CounterState>) {
-  const count$ = state.toStream((state) => state.count);
-  const double$ = state.toStream((state) => state.count * 2);
+export class CounterService {
+  private _state = new State(initialState);
 
-  function increment(amount: number) {
-    state.set((state) => {
+  /**
+   * Manages a count value.
+   */
+  constructor() {}
+
+  /**
+   * Observable count value.
+   */
+  get count$() {
+    return this._state.toStream((s) => s.count);
+  }
+
+  /**
+   * Derived observable value.
+   */
+  get double$() {
+    return this._state.toStream((s) => s.count * 2);
+  }
+
+  /**
+   * Increments count by an amount.
+   * @param amount number
+   */
+  increment(amount: number) {
+    this._state.set((state) => {
       state.count = state.count + amount;
     });
   }
 
-  function decrement(amount: number) {
-    state.set((state) => {
+  /**
+   * Decrements count by an amount.
+   * @param amount number
+   */
+  decrement(amount: number) {
+    this._state.set((state) => {
       state.count = state.count - amount;
     });
   }
 
-  function multiply(amount: number) {
-    state.set((state) => {
+  /**
+   * Multiplies count by an amount.
+   * @param amount number
+   */
+  multiply(amount: number) {
+    this._state.set((state) => {
       state.count = state.count * amount;
     });
   }
 
-  function setCount(value: number) {
-    state.set((state) => {
+  /**
+   * Sets count to value.
+   * @param value number
+   */
+  setCount(value: number) {
+    this._state.set((state) => {
       state.count = value;
     });
   }
-
-  return {
-    count$,
-    double$,
-    increment,
-    decrement,
-    multiply,
-    setCount,
-  };
 }
-
-export const counterService = CounterService(State(initialState));

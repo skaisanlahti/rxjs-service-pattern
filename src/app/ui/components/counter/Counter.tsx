@@ -2,21 +2,20 @@ import { useServices } from '../../../services';
 import Count from './Count';
 
 export default function Counter() {
-  const { increment, decrement, setCount, count$, double$ } =
-    useServices().counter;
+  const { counter } = useServices();
 
   return (
     <section className="counter">
-      <Count count$={count$} />
-      <Count count$={double$} />
+      <Count count$={counter.count$} />
+      <Count count$={counter.double$} />
       <section className="counter_controls">
-        <button className="button" onClick={() => increment(1)}>
+        <button className="button" onClick={() => counter.increment(1)}>
           +
         </button>
-        <button className="button" onClick={() => decrement(1)}>
+        <button className="button" onClick={() => counter.decrement(1)}>
           -
         </button>
-        <button className="button" onClick={() => setCount(0)}>
+        <button className="button" onClick={() => counter.setCount(0)}>
           Reset
         </button>
       </section>

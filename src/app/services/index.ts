@@ -1,10 +1,11 @@
 import createTypedContext from '../../utilities/create-typed-context';
-import { counterService } from './counter-service';
-import { todoService } from './todo-service';
+import { api } from '../data-layer/todo-data';
+import { CounterService } from './counter-service';
+import { TodoService } from './todo-service';
 
 export const services = {
-  counter: counterService,
-  todos: todoService,
+  counter: new CounterService(),
+  todos: new TodoService(api),
 };
 
 export type Services = typeof services;
