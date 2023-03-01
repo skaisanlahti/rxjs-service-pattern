@@ -1,0 +1,41 @@
+.layout {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: min-content 1fr min-content;
+  grid-template-rows: min-content 1fr min-content;
+  grid-template-areas:
+    'top top top'
+    'left content right'
+    'bottom bottom bottom';
+}
+
+.layout_header {
+  grid-area: top;
+  display: flex;
+  justify-content: center;
+}
+
+.layout_title {
+  font-size: 3rem;
+}
+
+.layout_left {
+  grid-area: left;
+}
+
+.layout_content {
+  grid-area: content;
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.layout_right {
+  grid-area: right;
+}
+
+.layout_footer {
+  grid-area: bottom;
+}

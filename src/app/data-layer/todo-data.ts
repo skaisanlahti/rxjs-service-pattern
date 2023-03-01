@@ -1,6 +1,5 @@
 import produce from 'immer';
 import { firstValueFrom, map, timer } from 'rxjs';
-import Task from '../../utilities/task';
 import { Todo } from '../services/todo-service';
 import todoJson from './todos.json';
 
@@ -75,15 +74,13 @@ function saveTodos(newTodos: Todo[]) {
  * instance of the task pipeline.
  */
 export const api = {
-  getTodos: new Task(getTodos, { retry: { count: 5, delay: 1000 } }),
-  addTodo: new Task(addTodo),
-  removeTodo: new Task(removeTodo),
-  checkTodo: new Task(checkTodo),
-  resetTodos: new Task(resetTodos),
-  saveTodos: new Task(saveTodos),
-  getTodosAsync: Task.fromPromise(getTodosAsync, {
-    retry: { count: 5, delay: 1000 },
-  }),
+  getTodos,
+  addTodo,
+  removeTodo,
+  checkTodo,
+  resetTodos,
+  saveTodos,
+  getTodosAsync,
 };
 
 export type API = typeof api;

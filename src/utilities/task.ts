@@ -29,7 +29,7 @@ function validateRetryConfig(retryOptions?: RetryConfig) {
   return retryOptions;
 }
 
-export default class Task<Result, Parameters = void> {
+export default class ObservableTask<Result, Parameters = void> {
   private _cancel$ = new Subject<void>();
   private _pending$ = new BehaviorSubject(false);
   private _results$ = new BehaviorSubject<Result | undefined>(undefined);
@@ -120,7 +120,7 @@ export default class Task<Result, Parameters = void> {
   ) {
     const operation = (params: Parameters) => from(promiseFunction(params));
     const operationName = options?.name ? options.name : promiseFunction.name;
-    return new Task(operation, { ...options, name: operationName });
+    return new ObservableTask(operation, { ...options, name: operationName });
   }
 
   /**
@@ -152,4 +152,127 @@ export default class Task<Result, Parameters = void> {
   run(params: Parameters) {
     this._handler(params).subscribe();
   }
+}
+
+/**
+ * Wraps an asynchronous operation inside a task handler that provides pending, result, and error states.
+ * Automatically cancels duplicate calls by canceling old ones and runs only the latest one.
+ * @param operation Function that returns an observable
+ * @param name Optional name for logging
+ */
+export function Task<Result, Parameters = void>(
+  operation: (params: Parameters) => Observable<Result>,
+  options?: TaskOptions,
+) {
+  const cancel$ = new Subject<void>();
+  const pending$ = new BehaviorSubject(false);
+  const results$ = new BehaviorSubject<Result | undefined>(undefined);
+  const errors$ = new BehaviorSubject<Error | undefined>(undefined);
+
+  // validate options
+  const name = options?.name ? options.name : operation.name;
+  const retryConfig = validateRetryConfig(options?.retry);
+  const count = retryConfig ? retryConfig.count : 0;
+  const delay = retryConfig ? retryConfig.delay : 0;
+
+  // build pipeline around the operation
+  const handler = (params: Parameters) => {
+    // cancel previous task if its still pending
+    if (pending$.getValue()) {
+      cancel$.next();
+    }
+
+    // create new task
+    return of(params).pipe(
+      // update pending state at start
+      tap(() => {
+        console.debug(`[${name}] task started.`);
+        pending$.next(true);
+      }),
+
+      // run operation
+      switchMap((params) => operation(params)),
+
+      // update results on success
+      tap((result) => {
+        console.debug(`[${name}] task finished.`);
+        results$.next(result);
+      }),
+
+      // if operation fails, retry with increasing delay
+      retry({
+        count,
+        delay: (error, timesRetried) => {
+          console.error(
+            `[${name}] task failed. Retrying after ${
+              (delay * timesRetried) / 1000
+            } seconds...`,
+          );
+
+          return timer(delay * timesRetried).pipe(map(() => error));
+        },
+      }),
+
+      // handle error incase retries failed
+      catchError((error) => {
+        console.error(`[${name}] task failed: ${error}.`);
+        errors$.next(error);
+        return of(error);
+      }),
+
+      // finalize pending state
+      tap(() => {
+        pending$.next(false);
+      }),
+
+      // abort operation on duplicate calls
+      takeUntil(cancel$),
+    );
+  };
+
+  /**
+   * Status of the current operation.
+   */
+  const pendingObs$ = pending$.asObservable();
+
+  /**
+   * Observable stream of results.
+   */
+  const resultsObs$ = results$.asObservable();
+
+  /**
+   * Observable stream of errors.
+   */
+  const errorsObs$ = errors$.asObservable();
+
+  /**
+   * Run the operation managed by this task pipeline.
+   * To see results, subscribe to the results stream.
+   * @param params Operation parameters
+   */
+  function run(params: Parameters) {
+    handler(params).subscribe();
+  }
+
+  return {
+    run,
+    pending$: pendingObs$,
+    results$: resultsObs$,
+    errors$: errorsObs$,
+  };
+}
+
+/**
+ * Converts a promise into an observable and returns a task handler.
+ * @param promiseFunction Async function that returns a promise
+ * @param options Optional task options
+ * @returns Task handler
+ */
+export function TaskfromPromise<Result, Parameters = void>(
+  promiseFunction: (params: Parameters) => Promise<Result>,
+  options?: TaskOptions,
+) {
+  const operation = (params: Parameters) => from(promiseFunction(params));
+  const operationName = options?.name ? options.name : promiseFunction.name;
+  return new ObservableTask(operation, { ...options, name: operationName });
 }
