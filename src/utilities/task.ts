@@ -40,7 +40,7 @@ export default class Task<Result, Parameters = void> {
    * Wraps an asynchronous operation inside a task handler that provides pending, result, and error states.
    * Automatically cancels duplicate calls by canceling old ones and runs only the latest one.
    * @param operation Function that returns an observable
-   * @param name Optional name for logging
+   * @param options Optional retry config and name for logging
    */
   constructor(
     operation: (params: Parameters) => Observable<Result>,

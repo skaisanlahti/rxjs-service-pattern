@@ -3,17 +3,11 @@ import { api } from '../data-layer/todo-data';
 import { CounterService } from './counter-service';
 import { TodoService } from './todo-service';
 
-/**
- * Creates an object of service instances.
- * @returns Services
- */
-export function createServices() {
-  return {
-    counter: new CounterService(),
-    todos: new TodoService(api),
-  };
-}
+export const services = {
+  counter: new CounterService(),
+  todos: new TodoService(api),
+};
 
-export type Services = ReturnType<typeof createServices>;
+export type Services = typeof services;
 
 export const [useServices, ServiceProvider] = createTypedContext<Services>();

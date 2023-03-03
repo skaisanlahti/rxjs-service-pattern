@@ -1,4 +1,4 @@
-import StatefulService from '../../utilities/stateful-service';
+import State from '../../utilities/state';
 
 interface CounterState {
   count: number;
@@ -6,26 +6,26 @@ interface CounterState {
 
 const initialState: CounterState = { count: 0 };
 
-export class CounterService extends StatefulService<CounterState> {
+export class CounterService {
+  private _countState = new State(initialState);
+
   /**
    * Manages a count value.
    */
-  constructor() {
-    super(initialState);
-  }
+  constructor() {}
 
   /**
    * Observable count value.
    */
   get count$() {
-    return this.createStream((s) => s.count);
+    return this._countState.toStream((state) => state.count);
   }
 
   /**
    * Derived observable value.
    */
   get double$() {
-    return this.createStream((s) => s.count * 2);
+    return this._countState.toStream((state) => state.count * 2);
   }
 
   /**
@@ -33,7 +33,7 @@ export class CounterService extends StatefulService<CounterState> {
    * @param amount number
    */
   increment(amount: number) {
-    this.setState((state) => {
+    this._countState.set((state) => {
       state.count = state.count + amount;
     });
   }
@@ -43,7 +43,7 @@ export class CounterService extends StatefulService<CounterState> {
    * @param amount number
    */
   decrement(amount: number) {
-    this.setState((state) => {
+    this._countState.set((state) => {
       state.count = state.count - amount;
     });
   }
@@ -53,17 +53,18 @@ export class CounterService extends StatefulService<CounterState> {
    * @param amount number
    */
   multiply(amount: number) {
-    this.setState((state) => {
+    this._countState.set((state) => {
       state.count = state.count * amount;
     });
   }
 
   /**
-   * Resets count value to 0.
+   * Sets count to value.
+   * @param value number
    */
-  reset() {
-    this.setState((state) => {
-      state.count = 0;
+  setCount(value: number) {
+    this._countState.set((state) => {
+      state.count = value;
     });
   }
 }
