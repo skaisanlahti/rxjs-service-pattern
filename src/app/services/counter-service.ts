@@ -7,7 +7,7 @@ interface CounterState {
 const initialState: CounterState = { count: 0 };
 
 export class CounterService {
-  private _state = new State(initialState);
+  private _countState = new State(initialState);
 
   /**
    * Manages a count value.
@@ -18,14 +18,14 @@ export class CounterService {
    * Observable count value.
    */
   get count$() {
-    return this._state.toStream((s) => s.count);
+    return this._countState.toStream((state) => state.count);
   }
 
   /**
    * Derived observable value.
    */
   get double$() {
-    return this._state.toStream((s) => s.count * 2);
+    return this._countState.toStream((state) => state.count * 2);
   }
 
   /**
@@ -33,7 +33,7 @@ export class CounterService {
    * @param amount number
    */
   increment(amount: number) {
-    this._state.set((state) => {
+    this._countState.set((state) => {
       state.count = state.count + amount;
     });
   }
@@ -43,7 +43,7 @@ export class CounterService {
    * @param amount number
    */
   decrement(amount: number) {
-    this._state.set((state) => {
+    this._countState.set((state) => {
       state.count = state.count - amount;
     });
   }
@@ -53,7 +53,7 @@ export class CounterService {
    * @param amount number
    */
   multiply(amount: number) {
-    this._state.set((state) => {
+    this._countState.set((state) => {
       state.count = state.count * amount;
     });
   }
@@ -63,7 +63,7 @@ export class CounterService {
    * @param value number
    */
   setCount(value: number) {
-    this._state.set((state) => {
+    this._countState.set((state) => {
       state.count = value;
     });
   }

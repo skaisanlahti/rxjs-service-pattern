@@ -1,4 +1,4 @@
-import { merge, skip } from 'rxjs';
+import { combineLatest, map, merge, skip } from 'rxjs';
 import createID from '../../utilities/create-id';
 import memoizeStream from '../../utilities/memoize-stream';
 import State from '../../utilities/state';
@@ -76,27 +76,10 @@ export class TodoService {
   }
 
   /**
-   * Setter for input field value.
-   * @param value string
-   */
-  setTaskInput(value: string) {
-    this._state.set((state) => {
-      state.taskInput = value;
-    });
-  }
-
-  /**
    * Loading state of getTodos task.
    */
   get getLoading$() {
     return memoizeStream(this._getTodos.pending$);
-  }
-
-  /**
-   * Fetches todos from server.
-   */
-  getTodos() {
-    this._getTodos.run();
   }
 
   /**
@@ -107,14 +90,6 @@ export class TodoService {
   }
 
   /**
-   * Saves current todo collection to server.
-   */
-  saveTodos() {
-    const { items } = this._state.get();
-    this._saveTodos.run(items);
-  }
-
-  /**
    * Loading state of resetTodos task.
    */
   get resetLoading$() {
@@ -122,10 +97,48 @@ export class TodoService {
   }
 
   /**
-   * Reverts current todos on the server to a default collection.
+   * Combined loading state of all tasks.
+   */
+  get combinedLoading$() {
+    return memoizeStream(
+      combineLatest([
+        this._getTodos.pending$,
+        this._saveTodos.pending$,
+        this._resetTodos.pending$,
+      ]).pipe(map((states) => states.some(Boolean))),
+    );
+  }
+
+  /**
+   * Fetches todos from mock server.
+   */
+  getTodos() {
+    this._getTodos.run();
+  }
+
+  /**
+   * Saves current todo collection to mock server.
+   */
+  saveTodos() {
+    const { items } = this._state.get();
+    this._saveTodos.run(items);
+  }
+
+  /**
+   * Reverts current todos on the mock server to a default collection.
    */
   resetTodos() {
     this._resetTodos.run();
+  }
+
+  /**
+   * Setter for input field value.
+   * @param value string
+   */
+  setTaskInput(value: string) {
+    this._state.set((state) => {
+      state.taskInput = value;
+    });
   }
 
   /**
