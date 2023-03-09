@@ -1,24 +1,23 @@
-import useStream from '../../../../utilities/use-stream';
-import { useServices } from '../../../services';
+import { useServices } from "../../../services";
 
 export default function TodosForm() {
-  const { todos } = useServices();
-  const taskInput = useStream(todos.taskInput$, '');
+  const { todoService } = useServices();
+  const task = todoService.useTask();
 
   return (
     <section className="todos_form">
       <input
         className="todos_input"
         placeholder="Task..."
-        value={taskInput}
+        value={task}
         onKeyDown={(e) => {
-          if (e.code === 'Enter') {
-            todos.addTodo();
+          if (e.code === "Enter") {
+            todoService.addTodo();
           }
         }}
-        onChange={(e) => todos.setTaskInput(e.target.value)}
+        onChange={(e) => todoService.setTask(e.target.value)}
       />
-      <button className="button" onClick={() => todos.addTodo()}>
+      <button className="button" onClick={() => todoService.addTodo()}>
         Add todo
       </button>
     </section>

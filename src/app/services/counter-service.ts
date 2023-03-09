@@ -1,31 +1,28 @@
-import State from '../../utilities/state';
-
-interface CounterState {
-  count: number;
-}
-
-const initialState: CounterState = { count: 0 };
+import { useObservableState } from "observable-hooks";
+import { BehaviorSubject } from "rxjs";
+import { memo } from "../../utilities/stream-utils";
 
 export class CounterService {
-  private _counterState = new State(initialState);
+  private _count$;
 
   /**
-   * Manages a count value.
+   * Manages a count state.
    */
-  constructor() {}
-
-  /**
-   * Observable count value.
-   */
-  get count$() {
-    return this._counterState.select((state) => state.count);
+  constructor() {
+    this._count$ = new BehaviorSubject(0);
   }
 
-  /**
-   * Derived observable value.
-   */
+  get count$() {
+    return this._count$.pipe(memo());
+  }
+
   get double$() {
-    return this._counterState.select((state) => state.count * 2);
+    return this._count$.pipe(memo((count) => count * 2));
+  }
+
+  useCount(mapFn?: (count: number) => number) {
+    if (mapFn) return useObservableState(this._count$.pipe(memo(mapFn)), this._count$.value);
+    return useObservableState(this.count$.pipe(memo()), this._count$.value);
   }
 
   /**
@@ -33,9 +30,7 @@ export class CounterService {
    * @param amount number
    */
   increment(amount: number) {
-    this._counterState.update((state) => {
-      return { count: state.count + amount };
-    });
+    this._count$.next(this._count$.value + amount);
   }
 
   /**
@@ -43,9 +38,7 @@ export class CounterService {
    * @param amount number
    */
   decrement(amount: number) {
-    this._counterState.update((state) => {
-      return { count: state.count - amount };
-    });
+    this._count$.next(this._count$.value - amount);
   }
 
   /**
@@ -53,9 +46,7 @@ export class CounterService {
    * @param amount number
    */
   multiply(amount: number) {
-    this._counterState.update((state) => {
-      return { count: state.count * amount };
-    });
+    this._count$.next(this._count$.value * amount);
   }
 
   /**
@@ -63,6 +54,6 @@ export class CounterService {
    * @param value number
    */
   setCount(value: number) {
-    this._counterState.set({ count: value });
+    this._count$.next(value);
   }
 }
