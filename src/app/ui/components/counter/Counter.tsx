@@ -15,6 +15,9 @@ export default function Counter() {
         <button className="button" onClick={() => counter.decrement(1)}>
           -
         </button>
+        <button className="button" onClick={() => counter.multiply(2)}>
+          x 2
+        </button>
         <button className="button" onClick={() => counter.setCount(0)}>
           Reset
         </button>

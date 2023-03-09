@@ -5,17 +5,17 @@ interface Props {
   children?: ReactNode;
 }
 
-export default function Loader(props: Props) {
-  if (!props.loading) return <>{props.children}</>;
+export default function Loader({ loading, children }: Props) {
+  if (!loading) return <>{children}</>;
   return (
-    <div className="loader_target">
-      <div className="loader">
+    <div className="loader">
+      <div className="loader_overlay">
         <div className="loader_ripple">
           <div></div>
           <div></div>
         </div>
       </div>
-      {props.children}
+      {children}
     </div>
   );
 }

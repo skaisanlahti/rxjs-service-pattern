@@ -1,9 +1,9 @@
-import { combineLatest, map, merge, skip } from 'rxjs';
+import { combineLatest, map, merge } from 'rxjs';
 import createID from '../../utilities/create-id';
 import memoizeStream from '../../utilities/memoize-stream';
 import State from '../../utilities/state';
 import Task from '../../utilities/task';
-import { API } from '../data-layer/todo-data';
+import { API } from '../data-access/todo-data';
 
 export interface Todo {
   id: string;
@@ -28,77 +28,59 @@ interface TodoState {
 const initialState: TodoState = { items: [], taskInput: '' };
 
 export class TodoService {
-  private _state = new State(initialState);
+  private _todoState = new State(initialState);
   private _getTodos;
   private _saveTodos;
   private _resetTodos;
 
   /**
    * Manages a collection of todo items and the value of the input field used to create new ones.
-   * @param _api Collection of data fetching operations
+   * @param api Collection of data fetching operations
    */
   constructor(api: API) {
+    this._saveTodos = new Task(api.saveTodos);
+    this._resetTodos = new Task(api.resetTodos);
     this._getTodos = new Task(api.getTodos, {
       retry: { count: 5, delay: 3000 },
     });
-    this._saveTodos = new Task(api.saveTodos);
-    this._resetTodos = new Task(api.resetTodos);
 
-    // Assign getTodo results to local state. Skip initial value when establishing subscription.
-    this._getTodos.results$.pipe(skip(1)).subscribe((result) => {
-      if (!result) return;
-      this._state.set((state) => {
-        state.items = result.data;
+    // Assign getTodo results to local state.
+    this._getTodos.results$.subscribe((result) => {
+      this._todoState.update((state) => {
+        return { ...state, items: result.data };
       });
     });
 
-    // Refetch todos from server after mutations. Skip initial value when establishing subscription.
-    merge(
-      this._saveTodos.results$.pipe(skip(1)),
-      this._resetTodos.results$.pipe(skip(1)),
-    ).subscribe(() => {
+    // Refetch todos from server after mutations.
+    merge(this._saveTodos.results$, this._resetTodos.results$).subscribe(() => {
       this._getTodos.run();
     });
   }
 
-  /**
-   * Observable array of todos.
-   */
+  get state$() {
+    return this._todoState.valueChanges$;
+  }
+
   get items$() {
-    return this._state.toStream((state) => state.items);
+    return this._todoState.select((state) => state.items);
   }
 
-  /**
-   * Observable input field value.
-   */
   get taskInput$() {
-    return this._state.toStream((state) => state.taskInput);
+    return this._todoState.select((state) => state.taskInput);
   }
 
-  /**
-   * Loading state of getTodos task.
-   */
   get getLoading$() {
-    return memoizeStream(this._getTodos.pending$);
+    return this._getTodos.pending$;
   }
 
-  /**
-   * Loading state of saveTodos task.
-   */
   get saveLoading$() {
-    return memoizeStream(this._saveTodos.pending$);
+    return this._saveTodos.pending$;
   }
 
-  /**
-   * Loading state of resetTodos task.
-   */
   get resetLoading$() {
-    return memoizeStream(this._resetTodos.pending$);
+    return this._resetTodos.pending$;
   }
 
-  /**
-   * Combined loading state of all tasks.
-   */
   get combinedLoading$() {
     return memoizeStream(
       combineLatest([
@@ -110,7 +92,8 @@ export class TodoService {
   }
 
   /**
-   * Fetches todos from mock server.
+   * Fetches todos from mock server. Reading of results stream
+   * is defined in the constructor.
    */
   getTodos() {
     this._getTodos.run();
@@ -120,7 +103,7 @@ export class TodoService {
    * Saves current todo collection to mock server.
    */
   saveTodos() {
-    const { items } = this._state.get();
+    const { items } = this._todoState.value;
     this._saveTodos.run(items);
   }
 
@@ -136,8 +119,8 @@ export class TodoService {
    * @param value string
    */
   setTaskInput(value: string) {
-    this._state.set((state) => {
-      state.taskInput = value;
+    this._todoState.update((state) => {
+      return { ...state, taskInput: value };
     });
   }
 
@@ -146,11 +129,12 @@ export class TodoService {
    * Uses the current taskInput value and resets it.
    */
   addTodo() {
-    this._state.set((state) => {
-      const newTask = state.taskInput;
-      const newTodo = createTodo(newTask);
-      state.items.push(newTodo);
-      state.taskInput = '';
+    this._todoState.update((state) => {
+      const newTodo = createTodo(state.taskInput);
+      return {
+        items: [...state.items, newTodo],
+        taskInput: '',
+      };
     });
   }
 
@@ -159,11 +143,9 @@ export class TodoService {
    * @param id Todo identifier
    */
   removeTodo(id: string) {
-    this._state.set((state) => {
-      const index = state.items.findIndex((t) => t.id === id);
-      if (index !== -1) {
-        state.items.splice(index, 1);
-      }
+    this._todoState.update((state) => {
+      const newItems = state.items.filter((item) => item.id !== id);
+      return { ...state, items: newItems };
     });
   }
 
@@ -172,12 +154,10 @@ export class TodoService {
    * @param id Todo identifier
    */
   toggleDone(id: string) {
-    this._state.set((draft) => {
-      const index = draft.items.findIndex((t) => t.id === id);
-      if (index !== -1) {
-        const update = !draft.items[index].done;
-        draft.items[index].done = update;
-      }
+    this._todoState.mutate((state) => {
+      state.items = state.items.map((item) => {
+        return item.id === id ? { ...item, done: !item.done } : item;
+      });
     });
   }
 }

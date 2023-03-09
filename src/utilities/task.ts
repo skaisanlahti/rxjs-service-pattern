@@ -1,5 +1,4 @@
 import {
-  BehaviorSubject,
   Observable,
   Subject,
   catchError,
@@ -12,6 +11,7 @@ import {
   tap,
   timer,
 } from 'rxjs';
+import State from './state';
 
 interface TaskOptions {
   name?: string;
@@ -31,13 +31,13 @@ function validateRetryConfig(retryOptions?: RetryConfig) {
 
 export default class Task<Result, Parameters = void> {
   private _cancel$ = new Subject<void>();
-  private _pending$ = new BehaviorSubject(false);
-  private _results$ = new BehaviorSubject<Result | undefined>(undefined);
-  private _errors$ = new BehaviorSubject<Error | undefined>(undefined);
+  private _results$ = new Subject<Result>();
+  private _errors$ = new Subject<Error>();
+  private _pending = new State(false);
   private _handler;
 
   /**
-   * Wraps an asynchronous operation inside a task handler that provides pending, result, and error states.
+   * Wraps an asynchronous operation inside a task handler that provides a pending state, and result/error streams.
    * Automatically cancels duplicate calls by canceling old ones and runs only the latest one.
    * @param operation Function that returns an observable
    * @param options Optional retry config and name for logging
@@ -55,7 +55,7 @@ export default class Task<Result, Parameters = void> {
     // build pipeline around the operation
     this._handler = (params: Parameters) => {
       // cancel previous task if its still pending
-      if (this._pending$.getValue()) {
+      if (this._pending.value) {
         this._cancel$.next();
       }
 
@@ -64,7 +64,7 @@ export default class Task<Result, Parameters = void> {
         // update pending state at start
         tap(() => {
           console.debug(`[${name}] task started.`);
-          this._pending$.next(true);
+          this._pending.set(true);
         }),
 
         // run operation
@@ -99,7 +99,7 @@ export default class Task<Result, Parameters = void> {
 
         // finalize pending state
         tap(() => {
-          this._pending$.next(false);
+          this._pending.set(false);
         }),
 
         // abort operation on duplicate calls
@@ -127,7 +127,7 @@ export default class Task<Result, Parameters = void> {
    * Status of the current operation.
    */
   get pending$() {
-    return this._pending$.asObservable();
+    return this._pending.valueChanges$;
   }
 
   /**
