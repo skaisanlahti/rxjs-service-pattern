@@ -1,13 +1,18 @@
 import createTypedContext from "../../utilities/create-typed-context";
-import { api } from "../data-access/todo-data";
-import { CounterService } from "./counter-service";
-import { TodoService } from "./todo-service";
+import { buildChecklist } from "./checklist";
+import { buildCounter } from "./counter";
 
-export const services = {
-  counterService: new CounterService(),
-  todoService: new TodoService(api),
+const { checklist, checklistService } = buildChecklist();
+checklistService.start();
+
+const { counter, counterService } = buildCounter(0);
+counterService.start();
+
+export const app = {
+  counter: counter,
+  checklist: checklist,
 };
 
-export type Services = typeof services;
+export type Application = typeof app;
 
-export const [useServices, ServiceProvider] = createTypedContext<Services>();
+export const [useApp, ApplicationProvider] = createTypedContext<Application>();

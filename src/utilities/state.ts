@@ -34,7 +34,7 @@ export default class State<T> {
    * @param mapFn selector function
    * @returns Memoized stream of the state changes
    */
-  select<R>(mapFn: (state: T) => R) {
+  select$<R>(mapFn: (state: T) => R) {
     return this._state$.pipe(memo(mapFn));
   }
 

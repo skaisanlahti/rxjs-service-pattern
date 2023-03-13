@@ -1,48 +1,48 @@
-.todos > * {
+.checklist > * {
   margin-bottom: 1rem;
 }
 
-.todos_form {
+.checklist_form {
   display: flex;
   align-items: stretch;
   gap: 1rem;
 }
 
-.todos_input {
+.checklist_input {
   font-size: 2rem;
   padding: 0.5rem;
   flex: 1;
 }
 
-.todos_controls {
+.checklist_controls {
   display: flex;
   gap: 1rem;
 }
 
-.todos_list {
+.checklist_list {
   min-width: 800px;
 }
 
-.todos_list > * {
+.checklist_list > * {
   margin-bottom: 0.5rem;
 }
 
-.todos_item {
+.checklist_item {
   display: grid;
   grid-template-columns: 1fr min-content min-content;
   gap: 1rem;
   align-items: center;
 }
 
-.todos_item-text {
+.checklist_item-text {
   vertical-align: middle;
   flex: 1;
 }
 
-.todos_item-text[aria-checked='true'] {
+.checklist_item-text[aria-checked="true"] {
   color: green;
 }
 
-.todos_item-text[aria-checked='false'] {
+.checklist_item-text[aria-checked="false"] {
   color: red;
 }

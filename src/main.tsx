@@ -1,13 +1,13 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { ServiceProvider, services } from './app/services';
-import { Root } from './app/ui/Root';
-import './app/ui/styles/main.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { ApplicationProvider, app } from "./app/services";
+import { Root } from "./app/ui/Root";
+import "./app/ui/styles/main.css";
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <ServiceProvider value={services}>
+    <ApplicationProvider value={app}>
       <Root />
-    </ServiceProvider>
-  </React.StrictMode>,
+    </ApplicationProvider>
+  </React.StrictMode>
 );

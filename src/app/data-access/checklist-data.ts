@@ -1,13 +1,21 @@
-import produce from 'immer';
-import { firstValueFrom, map, timer } from 'rxjs';
-import { Todo } from '../services/todo-service';
-import todoJson from './todos.json';
+import produce from "immer";
+import { firstValueFrom, map, timer } from "rxjs";
+import { ChecklistItem } from "../services/checklist";
+import checklistJson from "./checklist.json";
 
-let todos = todoJson.todos as Todo[];
+let checklist = checklistJson.checklist as ChecklistItem[];
 const mockDelay = 1000;
 
 export interface Response<T> {
   data: T;
+}
+
+export function toData<T>(value: { data: T }) {
+  return value.data;
+}
+
+export function toSomeTrue(bools: boolean[]) {
+  return bools.some(Boolean);
 }
 
 function mockRequest<T>(func: () => Response<T>) {
@@ -20,51 +28,51 @@ function mockPromise<T>(func: () => Response<T>) {
 
 function getTodosAsync() {
   return mockPromise(() => {
-    return { data: todos } as Response<Todo[]>;
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 
 function getTodos() {
   return mockRequest(() => {
-    return { data: todos } as Response<Todo[]>;
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 
-function addTodo(newTodo: Todo) {
+function addTodo(newTodo: ChecklistItem) {
   return mockRequest(() => {
-    todos = todos.concat(newTodo);
-    return { data: todos } as Response<Todo[]>;
+    checklist = checklist.concat(newTodo);
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 
 function removeTodo(id: string) {
   return mockRequest(() => {
-    todos = todos.filter((t) => t.id !== id);
-    return { data: todos } as Response<Todo[]>;
+    checklist = checklist.filter((t) => t.id !== id);
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 
 function checkTodo(id: string) {
   return mockRequest(() => {
-    todos = produce(todos, (draft) => {
+    checklist = produce(checklist, (draft) => {
       const index = draft.findIndex((t) => t.id === id);
       if (index !== -1) draft[index].done = !draft[index].done;
     });
-    return { data: todos } as Response<Todo[]>;
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 
 function resetTodos() {
   return mockRequest(() => {
-    todos = todoJson.todos;
-    return { data: todos } as Response<Todo[]>;
+    checklist = checklistJson.checklist;
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 
-function saveTodos(newTodos: Todo[]) {
+function saveTodos(newTodos: ChecklistItem[]) {
   return mockRequest(() => {
-    todos = newTodos;
-    return { data: todos } as Response<Todo[]>;
+    checklist = newTodos;
+    return { data: checklist } as Response<ChecklistItem[]>;
   });
 }
 

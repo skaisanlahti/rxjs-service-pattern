@@ -1,5 +1,5 @@
 {
-  "todos": [
+  "checklist": [
     { "id": "1", "task": "Make breakfast", "done": false },
     { "id": "2", "task": "Study code", "done": false },
     { "id": "3", "task": "Go to work", "done": false },
