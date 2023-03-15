@@ -62,10 +62,10 @@ export const defaultRetry: TaskOptions = {
 };
 
 export class Task<Result, Parameters = void> {
-  private _cancelTask = new Subject<void>();
-  private _task;
-  private _name;
-  private _retry;
+  private cancelTask = new Subject<void>();
+  private task;
+  private name;
+  private retry;
 
   results = new Subject<Result>();
   errors = new Subject<Error>();
@@ -79,9 +79,9 @@ export class Task<Result, Parameters = void> {
    */
   constructor(observableFn: ObservableFn<Result, Parameters>, options?: TaskOptions) {
     const { name, retry } = validateOptions(observableFn, options);
-    this._task = observableFn;
-    this._name = name;
-    this._retry = {
+    this.task = observableFn;
+    this.name = name;
+    this.retry = {
       count: retry.count,
       delay: (error, retries) => {
         const nextDelayInSeconds = (retry.delay * retries) / 1000;
@@ -109,15 +109,15 @@ export class Task<Result, Parameters = void> {
    * @returns observable operation
    */
   buildTask(params: Parameters) {
-    if (this.pending.value) this._cancelTask.next();
+    if (this.pending.value) this.cancelTask.next();
     return of(params).pipe(
-      tap(start(this._name, this.pending)),
-      switchMap((params) => this._task(params)),
-      tap(success(this._name, this.results)),
-      retry(this._retry),
-      catchError(fail(this._name, this.errors)),
+      tap(start(this.name, this.pending)),
+      switchMap((params) => this.task(params)),
+      tap(success(this.name, this.results)),
+      retry(this.retry),
+      catchError(fail(this.name, this.errors)),
       tap(finish(this.pending)),
-      takeUntil(this._cancelTask)
+      takeUntil(this.cancelTask)
     );
   }
 }

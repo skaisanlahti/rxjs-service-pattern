@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useApp } from "../../../services";
+import { useAdapter, useMethods } from "../../../services";
 
 export default function ChecklistForm() {
-  const { checklist } = useApp();
-  const loading = checklist.useLoading();
+  const methods = useMethods();
+  const loading = useAdapter((s) => s.checklist.loading);
   const [task, setTask] = useState("");
 
-  function submit() {
-    checklist.submitItem(task);
+  function itemSubmitClicked() {
+    methods.checklist.addItem(task);
     setTask("");
   }
+  const itemSubmitEnterPushed = itemSubmitClicked;
 
   return (
     <section className="checklist_form">
@@ -19,9 +20,9 @@ export default function ChecklistForm() {
         disabled={loading}
         value={task}
         onChange={getValue(setTask)}
-        onKeyDown={onKey("Enter", submit)}
+        onKeyDown={onKey("Enter", itemSubmitEnterPushed)}
       />
-      <button className="button" disabled={loading} onClick={submit}>
+      <button className="button" disabled={loading} onClick={itemSubmitClicked}>
         Add todo
       </button>
     </section>

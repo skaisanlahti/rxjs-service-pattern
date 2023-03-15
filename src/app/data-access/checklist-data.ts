@@ -1,5 +1,6 @@
 import produce from "immer";
 import { firstValueFrom, map, timer } from "rxjs";
+import { Task } from "../../utilities/task";
 import { ChecklistItem } from "../services/checklist";
 import checklistJson from "./checklist.json";
 
@@ -92,3 +93,16 @@ export const api = {
 };
 
 export type API = typeof api;
+
+export function buildDataService(api: API) {
+  return {
+    getChecklist: new Task(api.getTodos),
+    resetChecklist: new Task(api.resetTodos),
+    saveChecklist: new Task(api.saveTodos),
+    addTodo: new Task(api.addTodo),
+    removeTodo: new Task(api.removeTodo),
+    checkTodo: new Task(api.checkTodo),
+  };
+}
+
+export type DataService = ReturnType<typeof buildDataService>;

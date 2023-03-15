@@ -1,7 +1,7 @@
 import { Observable, Subscription } from "rxjs";
 
 export class Service {
-  protected subscription: Subscription | null;
+  private subscription: Subscription | null;
   protected handleEvents: Observable<any> | null;
 
   constructor() {
