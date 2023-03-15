@@ -2,62 +2,76 @@ import produce from "immer";
 import { BehaviorSubject } from "rxjs";
 import { memo } from "./stream-utils";
 
-export default class State<T> {
-  private _state$;
+export class StateContainer<State> {
+  private readonly state;
 
-  /**
-   * Provides base functionality for handling state and creating selector streams.
-   * @param initialState Starting state
-   */
-  constructor(initialState: T) {
-    this._state$ = new BehaviorSubject<T>(initialState);
+  constructor(initialState: State) {
+    this.state = new BehaviorSubject<State>(initialState);
   }
 
-  /**
-   * The current value of the state.
-   */
   get value() {
-    return this._state$.value;
+    return this.state.value;
   }
 
-  /**
-   * A memoized stream of state changes.
-   * @returns Memoized stream of the state changes
-   */
-  get valueChanges$() {
-    return this._state$.pipe(memo());
+  get valueChanges() {
+    return this.state.pipe(memo());
   }
 
-  /**
-   * Create a memoized stream of state changes.
-   * Takes a selector function to create a derived stream.
-   * @param mapFn selector function
-   * @returns Memoized stream of the state changes
-   */
-  select<R>(mapFn: (state: T) => R) {
-    return this._state$.pipe(memo(mapFn));
+  select<Slice>(selector: (state: State) => Slice) {
+    return this.state.pipe(memo(selector));
   }
 
-  /**
-   * Updates the state with a new value and emits it through all derived selector streams.
-   * @param value new state value
-   */
-  set(update: T | ((state: T) => T)) {
+  set(update: Partial<State> | ((state: State) => State)) {
     if (update instanceof Function) {
-      const state = this._state$.value;
-      const nextState = update(state);
-      this._state$.next(nextState);
+      this.state.next(update(this.state.value));
     } else {
-      this._state$.next(update);
+      this.state.next({ ...this.state.value, ...update });
     }
   }
 
-  /**
-   * Updates the state using immer's produce function and emits the new value through all derived selector streams.
-   * @param updater Update operation that takes a mutable Immer draft of the current state as input
-   */
-  mutate(updater: (draft: T) => void) {
-    const nextValue = produce(this._state$.value, updater);
-    this._state$.next(nextValue);
+  produce(recipe: (draft: State) => void) {
+    this.state.next(produce(this.state.value, recipe));
   }
+}
+
+function mergeStateUpdate<State>(target: BehaviorSubject<State>, value: Partial<State>) {
+  target.next({ ...target.value, ...value });
+}
+
+function createNextState<T>(target: BehaviorSubject<T>, stateFactory: (state: T) => T) {
+  target.next(stateFactory(target.value));
+}
+
+export function createObservableState<T>(init: T) {
+  const state = new BehaviorSubject<T>(init);
+
+  const container = {
+    value: state.value,
+
+    stream: state,
+
+    valueChanges: state,
+
+    select<R>(selector: (state: T) => R) {
+      return state.pipe(memo(selector));
+    },
+
+    get() {
+      return state.value;
+    },
+
+    set(update: Partial<T> | ((state: T) => T)) {
+      if (update instanceof Function) {
+        createNextState(state, update);
+      } else {
+        mergeStateUpdate(state, update);
+      }
+    },
+
+    produce(recipe: (draft: T) => void) {
+      state.next(produce(state.value, recipe));
+    },
+  };
+
+  return container;
 }

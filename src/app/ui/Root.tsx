@@ -1,5 +1,5 @@
-import Counter from './components/counter/Counter';
-import Todos from './components/todos/Todos';
+import Checklist from "./components/checklist/Checklist";
+import Counter from "./components/counter/Counter";
 
 export function Root() {
   return (
@@ -9,7 +9,7 @@ export function Root() {
       </header>
       <main className="layout_content">
         <Counter />
-        <Todos />
+        <Checklist />
       </main>
     </div>
   );
